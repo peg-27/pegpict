@@ -2,7 +2,7 @@
   "name": "PEG PICT",
   "short_name": "PEG PICT",
   "description": "多機能画像編集アプリ",
-  "start_url": "/",
+  "start_url": "/pegpict/",
   "display": "standalone",
   "background_color": "#181818",
   "theme_color": "#181818",

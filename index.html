@@ -2736,7 +2736,7 @@ function loadSettings() {
 const favColors=['#e63946','#f4a261','#2a9d8f','#264653','#ffffff','#000000','#9b5de5','#f15bb5'];
 // カラー履歴（最大9色 / 描画時に先頭追加）
 const colorHistory=[];
-const MAX_HIST=9;
+const MAX_HIST=8;
 const MAX_FAV=8;
 
 // ── サイズ履歴（最大10件 / 描画確定時に追加） ──
@@ -3008,26 +3008,45 @@ $('bpOpac').addEventListener('input',e=>{
 $('bpOpac').addEventListener('change',()=>saveSettings());
 
 // ── サイズ／透明度 ＋－ボタン ──
-$('bpSizeMinus').addEventListener('click',()=>{
-  const sl=$('bpSize');
-  sl.value=Math.max(+sl.min,+sl.value-1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('bpSizePlus').addEventListener('click',()=>{
-  const sl=$('bpSize');
-  sl.value=Math.min(+sl.max,+sl.value+1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('bpOpacMinus').addEventListener('click',()=>{
-  const sl=$('bpOpac');
-  sl.value=Math.max(+sl.min,+sl.value-1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('bpOpacPlus').addEventListener('click',()=>{
-  const sl=$('bpOpac');
-  sl.value=Math.min(+sl.max,+sl.value+1);
-  sl.dispatchEvent(new Event('input'));
-});
+function setupPressButton(btnId, slId, dir) {
+  const btn = $(btnId);
+  const sl = () => $(slId);
+  let timer = null;
+  let interval = null;
+
+  function step() {
+    const s = sl();
+    if (dir < 0) s.value = Math.max(+s.min, +s.value - 1);
+    else         s.value = Math.min(+s.max, +s.value + 1);
+    s.dispatchEvent(new Event('input'));
+  }
+
+  function start() {
+    step();
+    timer = setTimeout(() => {
+      interval = setInterval(step, 80);
+    }, 400);
+  }
+
+  function stop() {
+    clearTimeout(timer);
+    clearInterval(interval);
+    timer = null;
+    interval = null;
+  }
+
+  btn.addEventListener('touchstart', e => { e.preventDefault(); start(); }, { passive: false });
+  btn.addEventListener('touchend',   stop);
+  btn.addEventListener('touchcancel',stop);
+  btn.addEventListener('mousedown',  start);
+  btn.addEventListener('mouseup',    stop);
+  btn.addEventListener('mouseleave', stop);
+}
+
+setupPressButton('bpSizeMinus', 'bpSize', -1);
+setupPressButton('bpSizePlus',  'bpSize', +1);
+setupPressButton('bpOpacMinus', 'bpOpac', -1);
+setupPressButton('bpOpacPlus',  'bpOpac', +1);
 
 // ── SV正方形カラーピッカー（グリッド／スペクトル タブ対応版） ──
 (function(){
@@ -3680,26 +3699,10 @@ $('epOpac').addEventListener('input',e=>{
 });
 $('epOpac').addEventListener('change',()=>saveSettings());
 
-$('epSizeMinus').addEventListener('click',()=>{
-  const sl=$('epSize');
-  sl.value=Math.max(+sl.min,+sl.value-1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('epSizePlus').addEventListener('click',()=>{
-  const sl=$('epSize');
-  sl.value=Math.min(+sl.max,+sl.value+1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('epOpacMinus').addEventListener('click',()=>{
-  const sl=$('epOpac');
-  sl.value=Math.max(+sl.min,+sl.value-1);
-  sl.dispatchEvent(new Event('input'));
-});
-$('epOpacPlus').addEventListener('click',()=>{
-  const sl=$('epOpac');
-  sl.value=Math.min(+sl.max,+sl.value+1);
-  sl.dispatchEvent(new Event('input'));
-});
+setupPressButton('epSizeMinus', 'epSize', -1);
+setupPressButton('epSizePlus',  'epSize', +1);
+setupPressButton('epOpacMinus', 'epOpac', -1);
+setupPressButton('epOpacPlus',  'epOpac', +1);
 
 [$('erTabNormal'),$('erTabSoft')].forEach((btn,i)=>{
   btn.addEventListener('click',()=>{
@@ -8834,6 +8837,7 @@ function getFn(ext) {
     fnInputEl.select();
     fnCallback = function(ok) {
       fnOverlayEl.classList.add('off');
+      fnOverlayEl.querySelector('.modal').style.transform = '';
       if (!ok) { resolve(null); return; }
       var v = fnInputEl.value.trim() || 'image';
       resolve(v + ext);
@@ -8845,6 +8849,21 @@ $('fnOk').addEventListener('click', function(){ if(fnCallback) fnCallback(true);
 fnInputEl.addEventListener('keydown', function(e){
   if(e.key==='Enter'){ if(fnCallback) fnCallback(true); }
   if(e.key==='Escape'){ if(fnCallback) fnCallback(false); }
+});
+
+// キーボード表示時にモーダルを上に逃がす
+window.addEventListener('resize', function(){
+  if(!fnOverlayEl.classList.contains('off')){
+    const modal = fnOverlayEl.querySelector('.modal');
+    const rect = modal.getBoundingClientRect();
+    const windowH = window.innerHeight;
+    if(rect.bottom > windowH - 16){
+      const shift = rect.bottom - (windowH - 16);
+      modal.style.transform = 'translateY(-' + shift + 'px)';
+    } else {
+      modal.style.transform = '';
+    }
+  }
 });
 
 // ===== 保存実行（ファイル名モーダル経由） =====
@@ -8862,7 +8881,7 @@ $('mSvOk').addEventListener('click', async ()=>{
   $('mSave').classList.add('off');
 });
 
-// ═══════════════════════════════════════════════════════════════
+//═══════════════════════════════════════════════════════════════
 // ブラウザバック・ページ離脱の保護
 //
 // 編集画面（ペイント等）でブラウザバック → goMain（キャンセル扱い）

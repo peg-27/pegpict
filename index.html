@@ -9,6 +9,7 @@
 <title>PEG PICT</title>
 <link rel="manifest" href="/pegpict/manifest.json">
 <link rel="icon" type="image/png" sizes="192x192" href="/pegpict/icon-192.png">
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=LINE+Seed+JP:wght@100;400;700;800&display=swap">
 <meta name="mobile-web-app-capable" content="yes">
 <script>
   if ('serviceWorker' in navigator) {
@@ -235,6 +236,14 @@ input[type=range]::-webkit-slider-thumb{-webkit-appearance:none;width:20px;heigh
 #hScaleBR{background:var(--acc);bottom:-14px;right:-14px;}
 /* 回転ハンドル：上中央 */
 #hRot{background:var(--red);top:-26px;left:50%;transform:translateX(-50%);}
+
+/* テキスト画面トップバー（二段） */
+#textTopbar{height:var(--tb2);flex-direction:column;overflow:visible;padding:0;gap:0;}
+#textTopbar .tb-row1,#textTopbar .tb-row2{height:var(--tb);display:flex;align-items:center;padding:0 6px;gap:2px;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;flex-shrink:0;}
+/* 二段目ボタン幅統一 */
+#textTopbar .tb-row2 .tbb{min-width:36px;max-width:36px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;padding:0;}
+#textTopbar .tb-row2 .tbb-color{min-width:36px;max-width:36px;width:36px;height:36px;display:flex;align-items:center;justify-content:center;flex-shrink:0;box-sizing:border-box;padding:4px;}
+
 
 /* ══ テキストオーバーレイ (v3) ══
    .txtel  : テキストボックス本体
@@ -1218,39 +1227,45 @@ style="padding-top:0px;" id="bpFavRow"></div>
 <textarea id="txtHiddenInput" style="position:fixed;left:-9999px;top:-9999px;width:1px;height:1px;opacity:0;font-size:16px;" autocomplete="new-password" autocorrect="off" autocapitalize="off" spellcheck="false" data-form-type="other"></textarea>
 <div class="screen off" id="sText">
   <div class="topbar" id="textTopbar" style="position:relative;">
-    <!-- 一段目：Undo/Redo ｜ テキスト（中央） ｜ キャンセル・確定 -->
+    <!-- 一段目：Undo/Redo ｜ リセット（中央） ｜ キャンセル・確定 -->
     <div class="tb-row1" style="position:relative;">
       <button class="tbb" id="textUndo"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M9 14L4 9l5-5"/><path d="M4 9h10.5a5.5 5.5 0 010 11H11"/></svg></button>
       <button class="tbb" id="textRedo"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>
-      <span class="tb-title" id="tbTitleText">テキスト</span>
-      <div id="textBoxActions" style="position:absolute;left:50%;transform:translateX(-50%);display:none;gap:5px;align-items:center;">
+      <span id="tbTitleText" style="font-size:11px;color:var(--text2);margin-left:6px;white-space:nowrap;">テキスト</span>
+      <div class="sp"></div>
+      <!-- リセット（画面中央固定） -->
+      <button class="tbb" id="textResetView" title="表示リセット" style="position:absolute;left:50%;transform:translateX(-50%);z-index:0;">
+        <svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><circle cx="12" cy="12" r="3"/><path d="M3 12h3m12 0h3M12 3v3m0 12v3"/></svg>
+      </button>
+      <div id="textBoxActions" style="position:absolute;left:50%;transform:translateX(-50%);display:none;gap:5px;align-items:center;z-index:1;">
         <button class="tbb" id="btnCopyTextBox" style="min-width:60px;height:28px;justify-content:center;font-size:12px;background:#666;color:#fff;border-radius:8px;">コピー</button>
         <button class="tbb" id="btnPasteTextBox" style="min-width:60px;height:28px;justify-content:center;font-size:12px;background:#666;color:#fff;border-radius:8px;opacity:0.4;" disabled>ペースト</button>
         <button class="tbb" id="btnDeleteTextBox" style="min-width:60px;height:28px;justify-content:center;font-size:12px;background:#e53935;color:#fff;border-radius:8px;">削除</button>
       </div>
-      <div class="sp"></div>
       <button class="tbb cancel-x" id="textCancel">✕</button>
       <button class="tbb hi confirm-btn" id="textConfirm" style="min-width:64px;justify-content:center;">確定</button>
     </div>
-    <!-- 二段目：フォント選択｜字揃え｜ボックス追加｜フォントサイズ｜太字｜文字色｜背景色｜回転｜グリッド -->
-    <div class="tb-row2" style="justify-content:space-around;padding:0 4px;">
-      <button class="tbb" id="txtFontBtn" title="フォント" style="font-size:12px;min-width:36px;font-weight:bold;">G</button>
+    <!-- 二段目：フォント選択｜字揃え｜ボックス追加｜フォントサイズ｜太字｜文字色｜背景色｜背景設定｜回転｜グリッド -->
+    <div class="tb-row2" style="justify-content:center;padding:0 4px;gap:4px;">
+      <button class="tbb" id="txtFontBtn" title="フォント" style="font-size:12px;font-weight:bold;">G</button>
       <button class="tbb" id="txtAlBtn" title="字揃え">
         <svg id="txtAlIcon" width="15" height="15" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><line x1="3" y1="6" x2="21" y2="6"/><line x1="3" y1="12" x2="15" y2="12"/><line x1="3" y1="18" x2="18" y2="18"/></svg>
       </button>
       <button class="tbb" id="btnAddTextBox" title="テキストボックス追加"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="5" width="18" height="14" rx="2"/><path d="M12 9v6M9 12h6"/></svg></button>
-      <button class="tbb" id="txtSzBtn" title="フォントサイズ" style="font-size:11px;min-width:36px;"><span id="txtSzBtnVal">40</span></button>
-      <button class="tbb" id="txtBold" style="font-weight:bold;font-size:14px;min-width:34px;">B</button>
-      <div style="width:1px;flex-shrink:0;"></div>
-      <div id="txtColDot" style="width:28px;height:28px;border-radius:6px;background:#000000;cursor:pointer;border:1.5px solid var(--border);flex-shrink:0;" title="文字色"></div>
-      <div id="txtBgDot" style="width:28px;height:28px;border-radius:6px;background:transparent;cursor:pointer;border:1.5px dashed var(--border);flex-shrink:0;position:relative;" title="背景色">
+      <button class="tbb" id="txtSzBtn" title="フォントサイズ" style="font-size:11px;"><span id="txtSzBtnVal">40</span></button>
+      <button class="tbb" id="txtBold" style="font-weight:bold;font-size:14px;">B</button>
+      <div class="tbb-color" id="txtColDot" style="width:28px;height:28px;border-radius:6px;background:#000000;cursor:pointer;border:1.5px solid var(--border);flex-shrink:0;" title="文字色"></div>
+      <div class="tbb-color" id="txtBgDot" style="width:28px;height:28px;border-radius:6px;background:transparent;cursor:pointer;border:1.5px dashed var(--border);flex-shrink:0;position:relative;" title="背景色">
         <span id="txtBgNone" style="position:absolute;inset:0;display:flex;align-items:center;justify-content:center;font-size:14px;color:var(--text2);">∅</span>
       </div>
-      <button class="tbb" id="txtBgCfgBtn" title="背景 パディング・角丸" style="min-width:34px;">
-        <svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg>
+      <button class="tbb" id="txtBgCfgBtn" title="背景 パディング・角丸"><svg width="17" height="17" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="6"/><rect x="8" y="8" width="8" height="8" rx="2"/></svg>
       </button>
-      <div style="width:1px;flex-shrink:0;"></div>
-      <button class="tbb" id="txtRotBtn" title="回転モード"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M21 12a9 9 0 11-9-9"/><polyline points="21 3 21 9 15 9"/></svg></button>
+      <button class="tbb" id="txtRotBtn" title="回転モード">
+<svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24">
+<g transform="translate(12 12) scale(0.92) translate(-12 -12)">
+<path d="M21 12a9 9 0 11-9-9"/><polyline points="23 18 21 12.5 16 15"/>
+</g>
+</svg></button>
       <button class="tbb" id="txtGridBtn" title="グリッド切替"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
     </div>
   </div>
@@ -1259,7 +1274,7 @@ style="padding-top:0px;" id="bpFavRow"></div>
   <div id="txtFontModal" style="position:fixed;top:var(--tb2);left:0;right:0;z-index:300;background:var(--panel);border-bottom:1px solid var(--border);padding:10px 12px;display:none;gap:8px;justify-content:center;">
     <button class="tbb on" id="txtFontG" style="font-size:13px;min-width:60px;flex:1;max-width:100px;">G ゴシック</button>
     <button class="tbb" id="txtFontM" style="font-size:13px;min-width:60px;flex:1;max-width:100px;font-family:serif;">M 明朝</button>
-    <button class="tbb" id="txtFontK" style="font-size:13px;min-width:60px;flex:1;max-width:100px;font-family:monospace;">K 等幅</button>
+    <button class="tbb" id="txtFontL" style="font-size:13px;min-width:60px;flex:1;max-width:100px;font-family:'LINE Seed JP',sans-serif;">L LINE</button>
   </div>
 
   <!-- フォントサイズミニモーダル -->
@@ -1317,8 +1332,11 @@ style="padding-top:0px;" id="bpFavRow"></div>
     <button class="tbb" id="insRedo"><svg width="16" height="16" fill="none" stroke="currentColor" stroke-width="2" viewBox="0 0 24 24"><path d="M15 14l5-5-5-5"/><path d="M20 9H9.5a5.5 5.5 0 000 11H13"/></svg></button>
     <div class="sep"></div>
     <span style="font-size:12px;color:var(--text2);padding:0 6px;">画像挿入</span>
-    <!-- グリッドボタン：topbar中央に絶対配置 -->
-    <button class="tbb" id="insGridBtn" title="グリッド切替" style="position:absolute;left:50%;transform:translateX(-50%);min-width:40px;font-size:11px;"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+    <!-- グリッドボタン＋スナップボタン：topbar中央に絶対配置 -->
+    <div style="position:absolute;left:50%;transform:translateX(-50%);display:flex;gap:4px;align-items:center;">
+      <button class="tbb" id="insGridBtn" title="グリッド切替" style="min-width:40px;font-size:11px;"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><rect x="3" y="3" width="18" height="18" rx="1"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg></button>
+      <button class="tbb on" id="insSnapBtn" title="スナップ切替" style="min-width:40px;font-size:11px;"><svg width="15" height="15" fill="none" stroke="currentColor" stroke-width="1.8" viewBox="0 0 24 24"><path d="M4 4h4V2H2v6h2V4z"/><path d="M20 4h-4V2h6v6h-2V4z"/><path d="M4 20h4v2H2v-6h2v4z"/><path d="M20 20h-4v2h6v-6h-2v4z"/></svg></button>
+    </div>
     <div class="sp"></div>
     <button class="tbb cancel-x" id="insCancel">✕</button>
     <button class="tbb hi confirm-btn" id="insConfirm" style="min-width:64px;justify-content:center;">確定</button>
@@ -1519,20 +1537,18 @@ style="padding-top:0px;" id="bpFavRow"></div>
     <button class="tbb cancel-x" id="rzCancel">✕</button>
     <button class="tbb hi confirm-btn" id="rzConfirm" style="min-width:64px;justify-content:center;">確定</button>
   </div>
+  <div class="bsec" style="display:flex;flex-direction:column;gap:6px;padding:8px 12px 4px;background:var(--bg);">
+    <div class="row" style="width:100%;">
+      <input type="number" id="rzW" class="minput" style="flex:1;text-align:center;background:var(--bg-edit);">
+      <button class="tbb on" id="rzLock" style="flex-shrink:0;font-size:16px;background:var(--bg-edit);border-radius:8px;">🔒</button>
+      <input type="number" id="rzH" class="minput" style="flex:1;text-align:center;background:var(--bg-edit);">
+    </div>
+    <button class="abtn full" id="rzApply">プレビュー更新</button>
+    <div style="font-size:11px;color:var(--text2);padding-bottom:2px;">元サイズ: <span id="rzCur"></span></div>
+  </div>
   <div class="cwrap" id="rzWrap">
     <div id="rzStack" style="position:absolute;left:0;top:0;transform-origin:0 0;"><canvas id="rzCanvas"></canvas></div>
     <div class="info-badge" id="rzInfo2"></div>
-  </div>
-  <div class="botpanel">
-    <div class="bsec">
-      <div class="row" style="width:100%;">
-        <input type="number" id="rzW" class="minput" style="flex:1;text-align:center;">
-        <button class="tbb on" id="rzLock" style="flex-shrink:0;font-size:16px;">🔒</button>
-        <input type="number" id="rzH" class="minput" style="flex:1;text-align:center;">
-      </div>
-      <button class="abtn full" id="rzApply">プレビュー更新</button>
-      <div style="font-size:11px;color:var(--text2);">元サイズ: <span id="rzCur"></span></div>
-    </div>
   </div>
 </div>
 
@@ -2837,7 +2853,7 @@ function renderSizeHistRow(){
 
 // ── カラー履歴追加（描画確定時に呼ぶ） ──
 function addColorHistory(hex){
-  if(colorHistory.includes(hex))return; // 同色は履歴に追加しない
+  colorHistory = colorHistory.filter(c => c !== hex); // 同色が既にあれば取り除く
   colorHistory.unshift(hex);
   if(colorHistory.length>MAX_HIST)colorHistory.pop();
   saveSettings();
@@ -4628,6 +4644,19 @@ function renderTxtGrid(){
   ctx.moveTo(0,cy);ctx.lineTo(W,cy);
   ctx.stroke();
 }
+
+// ── 表示リセットボタン ──
+$('textResetView').addEventListener('click',()=>{
+  const wrap=$('textWrap');
+  const ww=wrap.clientWidth, wh=wrap.clientHeight;
+  if(ww>0&&wh>0){
+    textZoom=Math.min(ww/masterCanvas.width,wh/masterCanvas.height)*0.95;
+    textPanX=(ww-masterCanvas.width*textZoom)/2;
+    textPanY=(wh-masterCanvas.height*textZoom)/2+25;
+    applyTextTransform();
+  }
+});
+
 $('txtGridBtn').addEventListener('click',()=>{
   txtGridMode=txtGridMode===0?1:0;
   $('txtGridBtn').classList.toggle('on',txtGridMode===1);
@@ -4636,7 +4665,7 @@ $('txtGridBtn').addEventListener('click',()=>{
 
 function tFontKeyToFamily(k){
   if(k==='M') return "Georgia,'Times New Roman',serif";
-  if(k==='K') return "'Courier New',Courier,monospace";
+  if(k==='L') return "'LINE Seed JP','Helvetica Neue',Helvetica,Arial,sans-serif";
   return "'Helvetica Neue',Helvetica,Arial,sans-serif";
 }
 
@@ -4691,10 +4720,10 @@ function openText(){
   $('txtSzBtnVal').textContent=tSize;
   $('txtBold').classList.toggle('on', tBold);
   // フォントキー
-  ['G','M','K'].forEach(x=>$('txtFont'+x).classList.remove('on'));
+  ['G','M','L'].forEach(x=>$('txtFont'+x).classList.remove('on'));
   $('txtFont'+tFontKey).classList.add('on');
   $('txtFontBtn').textContent=tFontKey;
-  $('txtFontBtn').style.fontFamily=tFontKey==='M'?"Georgia,'Times New Roman',serif":tFontKey==='K'?"'Courier New',Courier,monospace":"inherit";
+  $('txtFontBtn').style.fontFamily=tFontKey==='M'?"Georgia,'Times New Roman',serif":tFontKey==='L'?"'LINE Seed JP',sans-serif":"inherit";
   // テキスト揃え
   const _alBtnMap={left:'txtAlL',center:'txtAlC',right:'txtAlR'};
   ['txtAlL','txtAlC','txtAlR'].forEach(b=>$(b).classList.remove('on'));
@@ -4784,8 +4813,8 @@ function createTextBox(initialTxt,opts={}){
   const padX  = opts.padX  ?? tPad;
   const padY  = opts.padY  ?? Math.round(tPad/2);
   const radius= opts.radius?? tRadius;
-  // 初期ボックス幅: opts.boxW があればそれを使う、なければキャンバス幅の80%
-  const initBoxW = opts.boxW ?? Math.round(masterCanvas.width * 0.56);
+  // 初期ボックス幅: opts.boxW があればそれを使う、なければキャンバス幅の30%
+  const initBoxW = opts.boxW ?? Math.round(masterCanvas.width * 0.30);
 
   const el=document.createElement('div');
   el.className='txtel';
@@ -4867,7 +4896,7 @@ function createTextBox(initialTxt,opts={}){
     inner.appendChild(ttext);
   }
 
-  function refreshInner(){
+    function refreshInner(){
     const font=tFontKeyToFamily(el.dataset.fontKey||'G');
     const bgCol=el.dataset.bg||null;
     const hasBg=!!(bgCol&&bgCol!=='transparent');
@@ -4890,7 +4919,7 @@ function createTextBox(initialTxt,opts={}){
     inner.style.width=(+el.dataset.boxW||masterCanvas.width*0.8)+'px';
     inner.style.minWidth='20px';
     const _fontSize=(+(el.dataset.sz)||16)*txtScale();
-    inner.style.minHeight=(_fontSize*3)+'px'; // ← ここだけ変更（1.4 → 3）
+    inner.style.minHeight=(_fontSize*3)+'px';
     inner.style.direction='ltr';
     inner.style.unicodeBidi='isolate';
     // inner には背景を付けない（minHeight拡大領域に背景が広がるのを防ぐ）
@@ -4900,7 +4929,7 @@ function createTextBox(initialTxt,opts={}){
     // .ttext: テキスト本体（text-alignをここにかける）
     ttext.style.display='block';
     ttext.style.width='100%';
-    ttext.style.fontSize=(+(el.dataset.sz)*txtScale())+'px';
+    ttext.style.fontSize=_fontSize+'px';
     ttext.style.color=el.dataset.col;
     ttext.style.fontWeight=(el.dataset.bold==='1'?'bold':'normal');
     ttext.style.textAlign=alignVal;
@@ -4928,6 +4957,7 @@ function createTextBox(initialTxt,opts={}){
     }
     // 編集中はcontenteditable経由でテキストが管理されるので上書きしない
     if(!wasEditing){
+      // 空行の増殖を防ぐ: textContentで設定（innerHTMLやinnerTextを使わない）
       ttext.textContent=el.dataset.txt||'';
     }
     // selectionを復元
@@ -5008,7 +5038,8 @@ function createTextBox(initialTxt,opts={}){
     pdMoved=false;
   });
   el.addEventListener('pointermove',e=>{
-    if(!pdActive||!el.hasPointerCapture(e.pointerId))return;
+        if(txtIsPinching){pdActive=false;return;}
+if(!pdActive||!el.hasPointerCapture(e.pointerId))return;
     // editing中はpreventDefaultしない（テキスト選択をブラウザに任せる）
     if(!el.classList.contains('editing')){
       e.preventDefault();
@@ -5148,6 +5179,7 @@ function innerToDataset(el){
 // ── テキストボックス操作ボタン表示制御 ──
 function showTextActionBtns(show){
   $('tbTitleText').style.display=show?'none':'';
+  $('textResetView').style.display=show?'none':'';
   $('textBoxActions').style.display=show?'flex':'none';
   // 選択中はUndo/Redo・キャンセル・確定を非表示（cancel-xの!important対策でclass使用）
   ['textUndo','textRedo','textCancel','textConfirm'].forEach(id=>{
@@ -5182,10 +5214,10 @@ function selectTextBox(el){
   $('txtBold').classList.toggle('on',tBold);
   // フォントキー
   tFontKey=el.dataset.fontKey||'G';
-  ['G','M','K'].forEach(x=>$('txtFont'+x).classList.remove('on'));
+  ['G','M','L'].forEach(x=>$('txtFont'+x).classList.remove('on'));
   $('txtFont'+tFontKey).classList.add('on');
   $('txtFontBtn').textContent=tFontKey;
-  $('txtFontBtn').style.fontFamily=tFontKey==='M'?"Georgia,'Times New Roman',serif":tFontKey==='K'?"'Courier New',Courier,monospace":"inherit";
+  $('txtFontBtn').style.fontFamily=tFontKey==='M'?"Georgia,'Times New Roman',serif":tFontKey==='L'?"'LINE Seed JP',sans-serif":"inherit";
   // 字揃え
   tAlign=el.dataset.align||'left';
   const _alBtnMap2={left:'txtAlL',center:'txtAlC',right:'txtAlR'};
@@ -5215,7 +5247,9 @@ function enterEditMode(el){
   tRadius=+(el.dataset.radius)||0;
   syncBgCfgUI();
   const ttext=el.querySelector('.ttext');
-  ttext.contentEditable='true';
+  ttext.contentEditable='plaintext-only';
+  // plaintext-only非対応ブラウザ向けフォールバック
+  if(ttext.contentEditable!=='plaintext-only') ttext.contentEditable='true';
   ttext.style.userSelect='text';
   ttext.style.webkitUserSelect='text';
   ttext.style.cursor='text';
@@ -5435,15 +5469,7 @@ function onTextWrapTap(cx,cy){
 
   function tdist(e){return Math.hypot(e.touches[1].clientX-e.touches[0].clientX,e.touches[1].clientY-e.touches[0].clientY);}
   function clampPan(){
-    const ww=wrap.clientWidth,wh=wrap.clientHeight;
-    const cw=masterCanvas.width*textZoom,ch=masterCanvas.height*textZoom;
-    // ズーム時は端まで行けるよう、キャンバスの20%分マージンを確保
-    const margin=Math.min(cw,ch)*0.5;
-    const minX=cw<ww?(ww-cw)/2:ww-cw-margin; const maxX=cw<ww?(ww-cw)/2:margin;
-    const initPanY=(wh-masterCanvas.height*textZoom)/2+30;
-    const minY=ch<wh?initPanY:wh-ch-margin-150; const maxY=ch<wh?initPanY:margin;
-    textPanX=Math.min(maxX,Math.max(minX,textPanX));
-    textPanY=Math.min(maxY,Math.max(minY,textPanY));
+    // clampなし（自由スクロール）: リセットボタンで中央に戻す仕様
   }
 
   // ピンチ中は全ボックスのpointer-eventsを無効にする
@@ -5471,6 +5497,13 @@ function onTextWrapTap(cx,cy){
       // 2本指タッチ中はボックスが反応しないよう無効化し、既存キャプチャも解放
       releaseAllBoxCaptures();
       setBoxPointerEvents('none');
+      // 編集中ボックスのドラッグも中断
+      textStack.querySelectorAll('.txtel').forEach(el=>{
+        // ポインターキャプチャを解放して移動を止める
+        for(let pid=0;pid<10;pid++){
+          try{el.releasePointerCapture(pid);}catch(e){}
+        }
+      });
       pD0=tdist(e); pZ0=textZoom;
       pMidX=(e.touches[0].clientX+e.touches[1].clientX)/2;
       pMidY=(e.touches[0].clientY+e.touches[1].clientY)/2;
@@ -5582,14 +5615,14 @@ $('txtSzBtn').addEventListener('click',()=>openTxtModal('txtSzModal'));
 $('txtAlBtn').addEventListener('click',()=>openTxtModal('txtAlModal'));
 
 // フォント選択
-['G','M','K'].forEach(k=>{
+['G','M','L'].forEach(k=>{
   $('txtFont'+k).addEventListener('click',()=>{
     tFontKey=k;
-    ['G','M','K'].forEach(x=>$('txtFont'+x).classList.remove('on'));
+    ['G','M','L'].forEach(x=>$('txtFont'+x).classList.remove('on'));
     $('txtFont'+k).classList.add('on');
     // トップバーボタンのラベルを更新
     $('txtFontBtn').textContent=k;
-    $('txtFontBtn').style.fontFamily=k==='M'?"Georgia,'Times New Roman',serif":k==='K'?"'Courier New',Courier,monospace":"inherit";
+    $('txtFontBtn').style.fontFamily=k==='M'?"Georgia,'Times New Roman',serif":k==='L'?"'LINE Seed JP',sans-serif":"inherit";
     if(textEditingEl){textEditingEl.dataset.fontKey=k;textEditingEl.refreshInner&&textEditingEl.refreshInner();}
     else{const _s=textStack.querySelector('.txtel.selected');if(_s){_s.dataset.fontKey=k;_s.refreshInner&&_s.refreshInner();}}
     closeAllTxtModals();
@@ -5605,16 +5638,38 @@ $('txtSzSlider').addEventListener('input',()=>{
   {const _t=textEditingEl||textStack.querySelector('.txtel.selected');if(_t){_t.dataset.sz=tSize;_t.refreshInner&&_t.refreshInner();}}
   saveSettings();
 });
-$('txtSzMinus').addEventListener('click',()=>{
-  tSize=Math.max(8,tSize-2); $('txtSzSlider').value=tSize; $('txtSzVal').textContent=tSize; $('txtSzBtnVal').textContent=tSize;
+
+// フォントサイズ±ボタン長押し対応
+function applyTxtSzChange(delta){
+  tSize=Math.min(200,Math.max(8,tSize+delta));
+  $('txtSzSlider').value=tSize;
+  $('txtSzVal').textContent=tSize;
+  $('txtSzBtnVal').textContent=tSize;
   {const _t=textEditingEl||textStack.querySelector('.txtel.selected');if(_t){_t.dataset.sz=tSize;_t.refreshInner&&_t.refreshInner();}}
   saveSettings();
-});
-$('txtSzPlus').addEventListener('click',()=>{
-  tSize=Math.min(200,tSize+2); $('txtSzSlider').value=tSize; $('txtSzVal').textContent=tSize; $('txtSzBtnVal').textContent=tSize;
-  {const _t=textEditingEl||textStack.querySelector('.txtel.selected');if(_t){_t.dataset.sz=tSize;_t.refreshInner&&_t.refreshInner();}}
-  saveSettings();
-});
+}
+function setupLongPress(el, delta){
+  let timer=null, interval=null;
+  const start=()=>{
+    applyTxtSzChange(delta);
+    timer=setTimeout(()=>{
+      interval=setInterval(()=>applyTxtSzChange(delta),80);
+    },400);
+  };
+  const stop=()=>{
+    clearTimeout(timer);
+    clearInterval(interval);
+    timer=null; interval=null;
+  };
+  el.addEventListener('mousedown',start);
+  el.addEventListener('touchstart',e=>{e.preventDefault();start();},{passive:false});
+  el.addEventListener('mouseup',stop);
+  el.addEventListener('mouseleave',stop);
+  el.addEventListener('touchend',stop);
+  el.addEventListener('touchcancel',stop);
+}
+setupLongPress($('txtSzMinus'),-2);
+setupLongPress($('txtSzPlus'),+2);
 
 $('txtBold').addEventListener('click',()=>{
   tBold=!tBold; $('txtBold').classList.toggle('on',tBold);
@@ -5836,6 +5891,7 @@ const insLayerCtx=insLayerCanvas.getContext('2d');
 const insUndoStack=[],insRedoStack=[];
 let insImg=null, insD={x:0,y:0,w:0,h:0,angle:0,opacity:1};
 let insZoom=1, insPanX=0, insPanY=0;
+let insSnapEnabled=true;
 
 // ── 入口 ──
 // openInsert : 旧 API 互換用
@@ -5862,6 +5918,9 @@ function _openInsertScreen(img){
   // グリッドをリセット
   insGridMode = 0;
   $('insGridBtn').classList.remove('on');
+  // スナップをリセット（デフォルトON）
+  insSnapEnabled = true;
+  $('insSnapBtn').classList.add('on');
   // 透明度スライダーをリセット
   $('insOpacSlider').value=100;
   $('insOpacVal').textContent='100%';
@@ -6057,12 +6116,14 @@ const HDL_HIT=32; // ハンドルのヒット半径（canvas座標px）
 let insBoxLocked=false;
 
 function applySnapX(x, w){
+  if(!insSnapEnabled) return x;
   const cw=masterCanvas.width;
   if(Math.abs(x)<SNAP_PX) return 0;
   if(Math.abs(x+w-cw)<SNAP_PX) return cw-w;
   return x;
 }
 function applySnapY(y, h){
+  if(!insSnapEnabled) return y;
   const ch=masterCanvas.height;
   if(Math.abs(y)<SNAP_PX) return 0;
   if(Math.abs(y+h-ch)<SNAP_PX) return ch-h;
@@ -6196,6 +6257,10 @@ $('insWrap').addEventListener('touchstart',e=>{
         nw=Math.max(20,insD.w-dx); nh=nw*ratio;
         nx=insD.x+insD.w-nw;
       }
+      if(insSnapEnabled && insD.angle===0){
+        nx=applySnapX(nx,nw);
+        ny=applySnapY(ny,nh);
+      }
       insD.w=nw; insD.h=nh; insD.x=nx; insD.y=ny;
       insBox.style.width=insD.w+'px'; insBox.style.height=insD.h+'px';
       insBox.style.left=insD.x+'px'; insBox.style.top=insD.y+'px';
@@ -6291,6 +6356,11 @@ $('insGridBtn').addEventListener('click', ()=>{
   insGridMode = insGridMode === 0 ? 1 : 0;
   $('insGridBtn').classList.toggle('on', insGridMode === 1);
   renderInsGrid();
+});
+
+$('insSnapBtn').addEventListener('click',()=>{
+  insSnapEnabled=!insSnapEnabled;
+  $('insSnapBtn').classList.toggle('on',insSnapEnabled);
 });
 
 $('insConfirm').addEventListener('click',()=>{
@@ -7873,12 +7943,20 @@ $('trCancel').addEventListener('click',goMain);
 // リサイズ画面（sResize）
 //
 // 幅・高さを入力してプレビュー確認後に確定する。
-// rzLocked: アスペクト比ロック（🔒/🔓で切り替え）
+// rzLocked: アスペクト比ロック（施錠/解錠SVGで切り替え）
 // rzNewW/H: 「プレビュー更新」後の新しいサイズ（確定時に使う）
 // rzUndoStack/rzRedoStack: {w, h, dataURL} を保存するUndo/Redoスタック
 // ═══════════════════════════════════════════════════════════════
 const rzCanvas=$('rzCanvas'), rzCtx=rzCanvas.getContext('2d');
 let rzLocked=true, rzOrigW=0, rzOrigH=0, rzNewW=0, rzNewH=0;
+
+// ── 南京錠SVG ──
+const rzSvgLocked=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 10 0v4"/></svg>`;
+const rzSvgUnlocked=`<svg xmlns="http://www.w3.org/2000/svg" width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="11" width="18" height="11" rx="2" ry="2"/><path d="M7 11V7a5 5 0 0 1 9.9-1"/></svg>`;
+
+function rzUpdateLockIcon(){
+  $('rzLock').innerHTML=rzLocked?rzSvgLocked:rzSvgUnlocked;
+}
 
 // ── リサイズ Undo/Redo ──
 const rzUndoStack=[], rzRedoStack=[];
@@ -7923,28 +8001,33 @@ const rzPinch=setupPreviewPinchZoom(
 
 function openResize(){
   showScreen('sResize');
-  rzOrigW=masterCanvas.width;rzOrigH=masterCanvas.height;
-  rzNewW=rzOrigW;rzNewH=rzOrigH;
-  rzCanvas.width=rzOrigW;rzCanvas.height=rzOrigH;
+  rzOrigW=masterCanvas.width; rzOrigH=masterCanvas.height;
+  rzNewW=rzOrigW; rzNewH=rzOrigH;
+  rzCanvas.width=rzOrigW; rzCanvas.height=rzOrigH;
   rzCtx.drawImage(masterCanvas,0,0);
   rzPinch.reset();
-  $('rzW').value=rzOrigW;$('rzH').value=rzOrigH;
+  $('rzW').value=rzOrigW; $('rzH').value=rzOrigH;
   $('rzCur').textContent=rzOrigW+'×'+rzOrigH+' px';
   $('rzInfo2').textContent=rzCanvas.width+'×'+rzCanvas.height+' px';
   updateBadgeColor('rzInfo2',rzCanvas);
   rzUndoStack.length=0; rzRedoStack.length=0;
   updateRzUndoRedoBtns();
+  rzUpdateLockIcon();
 }
-$('rzLock').addEventListener('click',e=>{rzLocked=!rzLocked;e.currentTarget.textContent=rzLocked?'🔒':'🔓';e.currentTarget.classList.toggle('on',rzLocked);});
+$('rzLock').addEventListener('click',e=>{
+  rzLocked=!rzLocked;
+  rzUpdateLockIcon();
+  e.currentTarget.classList.toggle('on',rzLocked);
+});
 $('rzW').addEventListener('input',e=>{if(rzLocked){$('rzH').value=Math.round(+e.target.value*rzOrigH/rzOrigW);}});
 $('rzH').addEventListener('input',e=>{if(rzLocked){$('rzW').value=Math.round(+e.target.value*rzOrigW/rzOrigH);}});
 $('rzApply').addEventListener('click',()=>{
-  const nw=+$('rzW').value,nh=+$('rzH').value;if(!nw||!nh)return;
+  const nw=+$('rzW').value, nh=+$('rzH').value; if(!nw||!nh)return;
   rzSaveState();
-  rzNewW=nw;rzNewH=nh;
-  const tmp=document.createElement('canvas');tmp.width=nw;tmp.height=nh;
+  rzNewW=nw; rzNewH=nh;
+  const tmp=document.createElement('canvas'); tmp.width=nw; tmp.height=nh;
   tmp.getContext('2d').drawImage(masterCanvas,0,0,nw,nh);
-  rzCanvas.width=nw;rzCanvas.height=nh;rzCtx.drawImage(tmp,0,0);
+  rzCanvas.width=nw; rzCanvas.height=nh; rzCtx.drawImage(tmp,0,0);
   rzPinch.reset();
   $('rzInfo2').textContent=nw+'×'+nh+' px';
   updateBadgeColor('rzInfo2',rzCanvas);
@@ -7952,13 +8035,13 @@ $('rzApply').addEventListener('click',()=>{
 $('rzConfirm').addEventListener('click',()=>{
   if(rzNewW===rzOrigW&&rzNewH===rzOrigH)return goMain();
   masterSave();
-  masterCanvas.width=rzCanvas.width;masterCanvas.height=rzCanvas.height;
-  masterCtx.drawImage(rzCanvas,0,0);goMain();
+  masterCanvas.width=rzCanvas.width; masterCanvas.height=rzCanvas.height;
+  masterCtx.drawImage(rzCanvas,0,0); goMain();
 });
 $('rzCancel').addEventListener('click',goMain);
 
 // ═══════════════════════════════════════════════════════════════
-// ═══════════════════════════════════════════════════════════════
+
 // 画像調整画面（sAdjust）― トーンカーブ統合版
 // ─ 計算式・描画コードはトーンカーブ prototype v14 から忠実移植 ─
 // ═══════════════════════════════════════════════════════════════
@@ -8876,13 +8959,27 @@ $('mSvOk').addEventListener('click', async ()=>{
   const ext = saveFmt==='jpeg' ? '.jpg' : '.png';
   const name = await getFn(ext);
   if(name===null) return;
-  let url;
+  let targetCanvas;
   if(saveFmt==='jpeg'){
     const tmp=document.createElement('canvas');tmp.width=masterCanvas.width;tmp.height=masterCanvas.height;
     const tc=tmp.getContext('2d');tc.fillStyle='#fff';tc.fillRect(0,0,tmp.width,tmp.height);tc.drawImage(masterCanvas,0,0);
-    url=tmp.toDataURL('image/jpeg',+$('sQual').value/100);
-  }else{url=masterCanvas.toDataURL('image/png');}
-  const a=document.createElement('a');a.href=url;a.download=name;a.click();
+    targetCanvas=tmp;
+  }else{
+    targetCanvas=masterCanvas;
+  }
+  const mimeType=saveFmt==='jpeg'?'image/jpeg':'image/png';
+  const quality=saveFmt==='jpeg'?+$('sQual').value/100:undefined;
+  targetCanvas.toBlob(blob=>{
+    if(!blob)return;
+    const url=URL.createObjectURL(blob);
+    const a=document.createElement('a');
+    a.href=url;
+    a.download=name;
+    document.body.appendChild(a);
+    a.click();
+    document.body.removeChild(a);
+    setTimeout(()=>URL.revokeObjectURL(url),3000);
+  },mimeType,quality);
   $('mSave').classList.add('off');
 });
 
@@ -8998,12 +9095,14 @@ window.addEventListener('resize',()=>{
 // ── ページ読み込み時：バックアップがあれば自動復元 ──
 (async()=>{
   try{
+    if(location.search.includes('shared=true'))return; // 共有起動時はスキップ
     const ok=await restoreCanvas();
     if(ok){
       goMain();
     }
   }catch(e){}
 })();
+
 // ── 共有画像の受け取り処理（Share Target API）──
 if (location.search.includes('shared=true')) {
   (async () => {

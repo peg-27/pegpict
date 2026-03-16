@@ -72,6 +72,7 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 .topbar::-webkit-scrollbar{display:none;}
 
 /* テキスト画面トップバー（二段） */
+#sText{-webkit-user-select:none;user-select:none;}
 #textTopbar{height:var(--tb2);flex-direction:column;overflow:visible;padding:0;gap:0;}
 #textTopbar .tb-row1,#textTopbar .tb-row2{height:var(--tb);display:flex;align-items:center;padding:0 6px;gap:2px;width:100%;overflow-x:auto;overflow-y:hidden;-webkit-overflow-scrolling:touch;flex-shrink:0;}
 /* 回転・反転画面の二段topbar */
@@ -86,7 +87,11 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
 #textTopbar .tb-title{position:absolute;left:50%;transform:translateX(-50%);font-size:13px;color:var(--text2);pointer-events:none;white-space:nowrap;}
 .tbb{min-width:40px;height:40px;border-radius:8px;border:none;background:transparent;color:var(--text2);cursor:pointer;display:flex;align-items:center;justify-content:center;flex-shrink:0;font-family:inherit;font-size:13px;transition:all .12s;}
 .tbb:active,.tbb.on{background:var(--panel2);color:var(--text);}
-.tbb.hi{background:var(--acc);color:#fff;}   /* 強調ボタン（確定など） */
+.tbb.hi{background:var(--acc);color:#fff;}
+/* ボックス選択中にUndo/Redo/Cancel/Confirmを強制非表示 */
+.force-hide{display:none!important;}
+
+  /* 強調ボタン（確定など） */
 .tbb.cancel-x{
   background:var(--panel);
   color:var(--text2);
@@ -94,6 +99,8 @@ html,body{width:100%;height:100%;overflow:hidden;background:var(--bg);color:var(
   min-width:36px;width:36px;padding:0;
   font-size:16px;margin-right:16px;
 }
+.tbb.force-hide{display:none!important;}
+
 /* トップバーの確定ボタンだけ縦を少し縮める */
 .topbar .tbb.confirm-btn{
   height: 34px;
@@ -4719,11 +4726,14 @@ function openText(){
   $('txtSzVal').textContent=tSize;
   $('txtSzBtnVal').textContent=tSize;
   $('txtBold').classList.toggle('on', tBold);
+
   // フォントキー
+  if(tFontKey==='K') tFontKey='L'; // 旧バージョン互換（K→L）
   ['G','M','L'].forEach(x=>$('txtFont'+x).classList.remove('on'));
   $('txtFont'+tFontKey).classList.add('on');
   $('txtFontBtn').textContent=tFontKey;
   $('txtFontBtn').style.fontFamily=tFontKey==='M'?"Georgia,'Times New Roman',serif":tFontKey==='L'?"'LINE Seed JP',sans-serif":"inherit";
+
   // テキスト揃え
   const _alBtnMap={left:'txtAlL',center:'txtAlC',right:'txtAlR'};
   ['txtAlL','txtAlC','txtAlR'].forEach(b=>$(b).classList.remove('on'));
@@ -5181,9 +5191,12 @@ function showTextActionBtns(show){
   $('tbTitleText').style.display=show?'none':'';
   $('textResetView').style.display=show?'none':'';
   $('textBoxActions').style.display=show?'flex':'none';
-  // 選択中はUndo/Redo・キャンセル・確定を非表示（cancel-xの!important対策でclass使用）
   ['textUndo','textRedo','textCancel','textConfirm'].forEach(id=>{
-    $(id).classList.toggle('force-hide',show);
+    if(show){
+      $(id).style.setProperty('display','none','important');
+    } else {
+      $(id).style.removeProperty('display');
+    }
   });
 }
 function showDeleteBtn(show){ showTextActionBtns(show); }
@@ -5214,6 +5227,7 @@ function selectTextBox(el){
   $('txtBold').classList.toggle('on',tBold);
   // フォントキー
   tFontKey=el.dataset.fontKey||'G';
+  if(tFontKey==='K') tFontKey='L'; // 旧バージョン互換（K→L）
   ['G','M','L'].forEach(x=>$('txtFont'+x).classList.remove('on'));
   $('txtFont'+tFontKey).classList.add('on');
   $('txtFontBtn').textContent=tFontKey;
@@ -5250,6 +5264,16 @@ function enterEditMode(el){
   ttext.contentEditable='plaintext-only';
   // plaintext-only非対応ブラウザ向けフォールバック
   if(ttext.contentEditable!=='plaintext-only') ttext.contentEditable='true';
+  // ── Google検索タブ・ブラウザ検索候補の出現を抑制 ──
+  ttext.setAttribute('enterkeyhint', 'done');
+  ttext.setAttribute('inputmode', 'text');
+  ttext.setAttribute('autocomplete', 'off');
+  ttext.setAttribute('autocorrect', 'off');
+  ttext.setAttribute('autocapitalize', 'sentences');
+  ttext.setAttribute('spellcheck', 'false');
+  ttext.setAttribute('role', 'textbox');
+  ttext.setAttribute('aria-multiline', 'true');
+  ttext.setAttribute('data-form-type', 'other');
   ttext.style.userSelect='text';
   ttext.style.webkitUserSelect='text';
   ttext.style.cursor='text';
@@ -6409,7 +6433,7 @@ let ieZoom=1, iePanX=0, iePanY=0;
 // ツール設定
 // ieMode: 'eraser' | 'restore'
 // ieBrushType: 'normal' | 'air'（タブ選択）
-let ieMode='eraser', ieBrushType='normal';
+let ieMode='restore', ieBrushType='normal';
 
 // 消しゴム・復元ペンそれぞれのブラシ設定
 // [mode][type] = {size, opac}
@@ -6523,7 +6547,7 @@ function openInsEdit(){
   updateIeUndoRedoBtns();
 
   // ツールUIを初期化
-  ieMode='eraser'; ieBrushType='normal';
+  ieMode='restore'; ieBrushType='normal';
   _ieUpdateToolUI();
 
   // ズーム/パン 初期化
@@ -8914,7 +8938,15 @@ const fnExtEl = $('fnExt');
 function getFn(ext) {
   return new Promise(function(resolve) {
     fnExtEl.textContent = ext;
-    fnInputEl.value = 'image';
+    const now = new Date();
+    const pad = (n, d) => String(n).padStart(d, '0');
+    fnInputEl.value = pad(now.getFullYear(),4)
+      + pad(now.getMonth()+1,2)
+      + pad(now.getDate(),2)
+      + '_'
+      + pad(now.getHours(),2)
+      + pad(now.getMinutes(),2)
+      + pad(now.getSeconds(),2);
     fnOverlayEl.classList.remove('off');
     fnInputEl.focus();
     fnInputEl.select();

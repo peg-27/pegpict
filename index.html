@@ -2860,12 +2860,13 @@ function renderSizeHistRow(){
 
 // ── カラー履歴追加（描画確定時に呼ぶ） ──
 function addColorHistory(hex){
-  colorHistory = colorHistory.filter(c => c !== hex); // 同色が既にあれば取り除く
+  const idx = colorHistory.indexOf(hex);
+  if(idx !== -1) colorHistory.splice(idx, 1);
   colorHistory.unshift(hex);
-  if(colorHistory.length>MAX_HIST)colorHistory.pop();
+  if(colorHistory.length>MAX_HIST) colorHistory.pop();
   saveSettings();
   if($('mBrushPanel')&&!$('mBrushPanel').classList.contains('off')){
-    renderColorTab(); // パネル表示中なら即更新
+    renderColorTab();
   }
 }
 
@@ -3570,19 +3571,33 @@ function renderColorTab(){
   colorHistory.forEach((col,idx)=>{
     const d=document.createElement('div');
     d.className='bpc-hist';d.style.background=col;
-    d.addEventListener('click',()=>{
-      brushSettings.brush.color=col;
-      applyToolSettings();
-      syncColorTabFromSettings();
-      drawBrushPreview('bpColorPreview',bpActiveVtab,brushSettings.brush.size,brushSettings.brush.opac,col);
-      saveSettings();
-    });
-    // 長押しでお気に入りに追加
-    setupLongPress(d,()=>{
-      if(!favColors.includes(col)&&favColors.length<MAX_FAV){favColors.unshift(col);}
-      else if(!favColors.includes(col)){favColors.pop();favColors.unshift(col);}
-      renderColorTab();saveSettings();
-    });
+    let lt=null,longFired=false;
+    d.addEventListener('touchstart',()=>{
+      longFired=false;
+      lt=setTimeout(()=>{
+        longFired=true;lt=null;
+        if(!favColors.includes(col)&&favColors.length<MAX_FAV){favColors.unshift(col);}
+        else if(!favColors.includes(col)){favColors.pop();favColors.unshift(col);}
+        renderColorTab();saveSettings();
+      },600);
+    },{passive:true});
+    d.addEventListener('touchend',()=>{
+      if(lt){clearTimeout(lt);lt=null;}
+      if(!longFired){
+        brushSettings.brush.color=col;
+        applyToolSettings();
+        syncColorTabFromSettings();
+        drawBrushPreview('bpColorPreview',bpActiveVtab,brushSettings.brush.size,brushSettings.brush.opac,col);
+        // 選んだ色を履歴の先頭に移動
+        const ci=colorHistory.indexOf(col);
+        if(ci>0){colorHistory.splice(ci,1);colorHistory.unshift(col);}
+        saveSettings();
+        renderColorTab();
+      }
+    },{passive:true});
+    d.addEventListener('touchcancel',()=>{
+      if(lt){clearTimeout(lt);lt=null;}
+    },{passive:true});
     histRow.appendChild(d);
   });
 }
@@ -3599,6 +3614,7 @@ function setupLongPress(el,cb){
   el.addEventListener('mouseup',cancel);
   el.addEventListener('mouseleave',cancel);
 }
+
 // 長押し＋ドラッグで削除
 function setupLongPressDrag(el,cbDelete){
   let t=null,longPressed=false;

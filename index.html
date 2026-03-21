@@ -1859,17 +1859,17 @@ function _bkOpen(){
   });
 }
 
-// masterCanvasをIndexedDBに保存（Blobで保存しサイズ効率を確保）
+// masterCanvasをIndexedDBに保存（DataURLで保存）
 async function backupCanvas(){
   if(_bkSaving||!masterCanvas.width||!masterCanvas.height)return;
   // sStart画面にいる場合は保存しない
   if(!$('sStart').classList.contains('off'))return;
   _bkSaving=true;
   try{
-    const blob=await new Promise(r=>masterCanvas.toBlob(r,'image/png'));
+    const dataURL=masterCanvas.toDataURL('image/png');
     const db=await _bkOpen();
     const tx=db.transaction(_BK_STORE,'readwrite');
-    tx.objectStore(_BK_STORE).put({blob:blob,w:masterCanvas.width,h:masterCanvas.height,t:Date.now()},_BK_KEY);
+    tx.objectStore(_BK_STORE).put({dataURL:dataURL,w:masterCanvas.width,h:masterCanvas.height,t:Date.now()},_BK_KEY);
     await new Promise((res,rej)=>{tx.oncomplete=res;tx.onerror=rej;});
     _bkDirty=false;
   }catch(e){/* IndexedDB使用不可の環境では無視 */}
@@ -1883,18 +1883,16 @@ async function restoreCanvas(){
     const tx=db.transaction(_BK_STORE,'readonly');
     const req=tx.objectStore(_BK_STORE).get(_BK_KEY);
     const rec=await new Promise((res,rej)=>{req.onsuccess=()=>res(req.result);req.onerror=rej;});
-    if(!rec||!rec.blob)return false;
-    const url=URL.createObjectURL(rec.blob);
+    if(!rec||!rec.dataURL)return false;
     return new Promise(resolve=>{
       const img=new Image();
       img.onload=()=>{
         masterCanvas.width=rec.w;masterCanvas.height=rec.h;
         masterCtx.drawImage(img,0,0);
-        URL.revokeObjectURL(url);
         resolve(true);
       };
-      img.onerror=()=>{URL.revokeObjectURL(url);resolve(false);};
-      img.src=url;
+      img.onerror=()=>{resolve(false);};
+      img.src=rec.dataURL;
     });
   }catch(e){return false;}
 }
@@ -1926,8 +1924,8 @@ document.addEventListener('visibilitychange',async()=>{
       await backupCanvas();
     }
   }else{
-    // フォアグラウンドに戻ったとき：canvasが消えていたら復元
-    if($('sStart').classList.contains('off')&&_isCanvasBlank()){
+    // フォアグラウンドに戻ったとき：ホーム画面にいれば無条件に復元を試みる
+    if($('sStart').classList.contains('off')){
       const ok=await restoreCanvas();
       if(ok) refreshMainView();
     }
@@ -1953,13 +1951,13 @@ function masterUndo(){
   if(!mainUndoStack.length||_undoRedoBusy)return;
   _undoRedoBusy=true;
   mainRedoStack.push(masterCanvas.toDataURL());
-  loadDataURL(masterCtx,masterCanvas,mainUndoStack.pop(),()=>{refreshMainView();_undoRedoBusy=false;updateUndoRedoButtons();},true);
+  loadDataURL(masterCtx,masterCanvas,mainUndoStack.pop(),()=>{refreshMainView();_undoRedoBusy=false;updateUndoRedoButtons();_bkDirty=true;},true);
 }
 function masterRedo(){
   if(!mainRedoStack.length||_undoRedoBusy)return;
   _undoRedoBusy=true;
   mainUndoStack.push(masterCanvas.toDataURL());
-  loadDataURL(masterCtx,masterCanvas,mainRedoStack.pop(),()=>{refreshMainView();_undoRedoBusy=false;updateUndoRedoButtons();},true);
+  loadDataURL(masterCtx,masterCanvas,mainRedoStack.pop(),()=>{refreshMainView();_undoRedoBusy=false;updateUndoRedoButtons();_bkDirty=true;},true);
 }
 // Undo/Redoボタンのアクティブ状態を更新
 function updateUndoRedoButtons(){
